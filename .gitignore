@@ -486,3 +486,6 @@ $RECYCLE.BIN/
 
 # ignore sqlite db
 *.db
+
+#ignore gtfs files
+*.txt
