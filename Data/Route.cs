@@ -33,6 +33,7 @@ namespace gtfs_api.Data
         public string route_url { get; set; }
         public string route_color { get; set; }
         public string route_text_color { get; set; }
-        
+
+
     }
 }

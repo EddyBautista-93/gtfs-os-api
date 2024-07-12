@@ -1,6 +1,9 @@
+using System.Security.Cryptography.X509Certificates;
 using gtfs_api.Data;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Route = gtfs_api.Data.Route;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,7 +12,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddDbContextFactory<GTFSDbContext>(options => 
+
+// Dependency Injections
+builder.Services.AddDbContext<GTFSDbContext>(options => 
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"
     ))
 );
@@ -17,7 +22,7 @@ builder.Services.AddDbContextFactory<GTFSDbContext>(options =>
 var app = builder.Build();
 
 
-// create a bew service scope to ensure that scoped services are properly disposed of 
+// create a new service scope to ensure that scoped services are properly disposed of 
 using(var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<GTFSDbContext>();
@@ -36,16 +41,54 @@ app.UseHttpsRedirection();
 
 app.MapGet("/", () => "Test Test test");
 
-app.MapPost("/fileupload",(IFormFile file) =>
+app.MapPost("/fileupload",async (IFormFile file, [FromServices] GTFSDbContext dbContext) =>
 {
     if(file.Length == 0 || file == null)
         return Results.BadRequest("No file uploaded -- please upload valid file");
 
     // checks for file type.
     if(file.ContentType != "text/plain")    
-        return Results.BadRequest("Invalid file type -- please upload valid file");       
+        return Results.BadRequest("Invalid file type -- please upload valid file");     
 
-});
+    // parse the file and read the data
+    List<Route> routes = new List<Route>();
+    using(var streamReader = new StreamReader(file.OpenReadStream()))
+    {
+        string line;
+        bool isFirstLine = true;
+        while((line = await streamReader.ReadLineAsync()) != null)
+        {
+            if(isFirstLine)
+            {
+                // Skip the header line 
+                isFirstLine = false; 
+                continue;
+            }
+
+            var values = line.Split(',');
+
+            var route = new Route
+            {
+                route_id = int.Parse(values[0]),
+                agency_id = values[1],
+                route_short_name = values[2],
+                route_long_name = values[3],
+                route_desc = values[4],
+                route_type = values[5],
+                route_url = values[6],
+                route_color = values[7],
+                route_text_color = values[8]
+            };
+            routes.Add(route);
+        }
+    }
+
+    // save the data 
+    dbContext.Routes.AddRange(routes);
+    await dbContext.SaveChangesAsync();
+    return Results.Ok("File Uploaded Successfully");  
+
+}).DisableAntiforgery(); // only for testing
 
 app.Run();
 
