@@ -82,13 +82,17 @@ app.MapPost("/fileupload",async (IFormFile file, [FromServices] GTFSDbContext db
             routes.Add(route);
         }
     }
-
     // save the data 
     dbContext.Routes.AddRange(routes);
     await dbContext.SaveChangesAsync();
     return Results.Ok("File Uploaded Successfully");  
-
 }).DisableAntiforgery(); // only for testing
+
+app.MapGet("/routes", async ([FromServices] GTFSDbContext dbContext) =>
+{
+    var routes = await dbContext.Routes.ToListAsync();
+    return Results.Ok(routes);
+});
 
 app.Run();
 
