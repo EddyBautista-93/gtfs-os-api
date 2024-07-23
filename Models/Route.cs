@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace gtfs_api.Data
+namespace gtfs_api.Models
 {
     /*
     Fields from routes.txt

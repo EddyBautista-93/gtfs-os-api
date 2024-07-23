@@ -3,7 +3,8 @@ using gtfs_api.Data;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Route = gtfs_api.Data.Route;
+using gtfs_api.Models;
+using Route = gtfs_api.Models.Route;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,6 +51,9 @@ app.MapPost("/fileupload",async (IFormFile file, [FromServices] GTFSDbContext db
     if(file.ContentType != "text/plain")    
         return Results.BadRequest("Invalid file type -- please upload valid file");     
 
+
+    // if(dbContext.Routes.Count > 0)
+    //     dbContext.Routes.ExecuteDelete("");
     // parse the file and read the data
     List<Route> routes = new List<Route>();
     using(var streamReader = new StreamReader(file.OpenReadStream()))
