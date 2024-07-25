@@ -41,7 +41,7 @@ app.UseHttpsRedirection();
 
 
 app.MapGet("/", () => "Test Test test");
-
+// TODO: Need to convert this into a 
 app.MapPost("/fileupload",async (IFormFile file, [FromServices] GTFSDbContext dbContext) =>
 {
     if(file.Length == 0 || file == null)
